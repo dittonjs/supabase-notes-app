@@ -1,0 +1,2 @@
+SELECT * from auth.users;
+
