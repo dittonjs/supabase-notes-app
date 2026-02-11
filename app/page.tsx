@@ -87,6 +87,11 @@ export default async function Home() {
                 <p className="text-sm text-gray-500 dark:text-gray-500">
                   {formatDate(note.created_at)}
                 </p>
+                {note.file_url && <p className="text-sm text-gray-500 dark:text-gray-500">
+                  <a href={note.file_url} target="download">
+                    View File
+                  </a>
+                </p>}
               </div>
             ))}
           </div>

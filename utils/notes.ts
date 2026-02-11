@@ -9,6 +9,7 @@ export interface Note {
   content: string
   created_at: string
   updated_at: string
+  file_url: string | null
 }
 
 export async function getNotes(): Promise<{ data: Note[] | null; error: Error | null }> {
@@ -35,7 +36,8 @@ export async function getNotes(): Promise<{ data: Note[] | null; error: Error | 
 
 export async function createNote(
   title: string,
-  content: string
+  content: string,
+  file: File | null
 ): Promise<{ data: Note | null; error: Error | null }> {
   try {
     const supabase = await createClient()
@@ -51,7 +53,21 @@ export async function createNote(
       ])
       .select()
       .single()
+    if (file) {
+      const filePath = `${user?.id}/${file.name}`
+      const { error: fileError } = await supabase
+        .storage
+        .from('notes')
+        .upload(filePath, file)
+      if (fileError) {
+        console.error('Error uploading file:', fileError.message)
+        return { data: null, error: new Error(fileError.message) }
+      }
 
+      const { data: fileUrlData } = await supabase.storage.from('notes').getPublicUrl(filePath, {download: true})
+      const fileUrl = fileUrlData.publicUrl
+      await supabase.from('notes').update({ file_url: fileUrl }).eq('id', data.id);
+    }
     if (error) {
       console.error('Error creating note:', error)
       return { data: null, error: new Error(error.message) }
